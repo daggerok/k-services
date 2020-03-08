@@ -11,6 +11,7 @@ out/
 build/
 .gradle/
 */gradle*
+target/
 
 ### STS ###
 .apt_generated

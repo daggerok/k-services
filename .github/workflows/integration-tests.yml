@@ -54,13 +54,6 @@ jobs:
       - name: Install npm apps (wait-port)
         run: npm install -g wait-port
 
-#      - name: Cache gradle deps ~/.gradle
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.gradle
-#          key: ${{ runner.os }}-${{ matrix.os }}-gradle-
-#          restore-keys: |
-#            ${{ runner.os }}-${{ matrix.os }}-gradle-
       - name: Cache gradle deps
         uses: actions/cache@v1
         with:
@@ -72,27 +65,31 @@ jobs:
 
       - name: Build gradle apps
         run: |
+          cd $GITHUB_WORKSPACE && ./gradlew -p fu-a
           cd $GITHUB_WORKSPACE && ./gradlew -p gateway
           cd $GITHUB_WORKSPACE && ./gradlew -p service-a
           cd $GITHUB_WORKSPACE && ./gradlew -p service-b
       - name: Run gradle apps
         run: |
+          java -jar $GITHUB_WORKSPACE/fu-a/build/libs/*.jar &
           java -jar $GITHUB_WORKSPACE/gateway/build/libs/*.jar &
           java -jar $GITHUB_WORKSPACE/service-a/build/libs/*.jar &
           java -jar $GITHUB_WORKSPACE/service-b/build/libs/*.jar &
 
       - name: Test gw app
         run: |
-          echo "wait-port 8000 8001 8002"
+          echo "wait-port 8000 8001 8002 8003"
+          #wait-port 8003 8001 8002 8000
           wait-port 8001
           wait-port 8002
+          wait-port 8003
           wait-port 8000
           echo "http :8000"
           http :8000
           echo "http :8000/api"
           http :8000/api
 
-      - name: Test service-a
+      - name: Test service-a and fu-a apps
         run: |
           echo "http :8000/a"
           http :8000/a

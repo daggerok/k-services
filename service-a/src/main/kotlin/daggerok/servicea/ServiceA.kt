@@ -9,6 +9,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.support.GenericApplicationContext
 import org.springframework.context.support.beans
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.server.body
 import org.springframework.web.reactive.function.server.router
 
 @SpringBootApplication
@@ -38,18 +40,37 @@ private val myInitializers = beans {
     }
   }
   bean {
+    WebClient.builder()
+        // .baseUrl("http://127.0.0.1:8003")
+        .build()
+  }
+  bean {
     router {
+      val webClient = ref<WebClient>()
       log.info("logger on start...")
       "/".nest {
         GET("/") {
           log.info("GET logger...")
-          ok().bodyValue(mapOf(
-              "message" to "Hello!",
-              "_self" to it.uri()
-          ))
+          ok().body(
+              webClient.mutate()
+                  .baseUrl("http://127.0.0.1:8003/")
+                  .build()
+                  .get()
+                  .retrieve()
+                  .bodyToMono(Map::class.java)
+          )
         }
         path("/**") {
           log.info("path logger...")
+          ok().body(
+              webClient.mutate()
+                  .baseUrl("http://127.0.0.1:8003/api")
+                  .build()
+                  .get()
+                  .retrieve()
+                  .bodyToMono(Map::class.java)
+          )
+
           /*
           it.uri().run {
             val baseUrl = "$scheme://$authority"
@@ -59,16 +80,17 @@ private val myInitializers = beans {
             )
           }
           */
-          val uri = it.uri()
-          val baseUrl = uri.run { "$scheme://$authority" }
-          /*
-          ok().body(mapOf("api" to "$baseUrl/")
-              .toMono())
-          */
-          ok().bodyValue(mapOf(
-              "api" to "$baseUrl/",
-              "_self" to uri
-          ))
+
+          // val uri = it.uri()
+          // val baseUrl = uri.run { "$scheme://$authority" }
+          // /*
+          // ok().body(mapOf("api" to "$baseUrl/")
+          //     .toMono())
+          // */
+          // ok().bodyValue(mapOf(
+          //     "api" to "$baseUrl/",
+          //     "_self" to uri
+          // ))
         }
       }
     }
