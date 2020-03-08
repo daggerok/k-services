@@ -1,0 +1,115 @@
+name: integration-tests
+on: [push]
+jobs:
+  ui:
+    strategy:
+      matrix:
+        java: [11]
+        os: [ubuntu-latest]
+        nodejs-version: [12]
+        python-version: [3.8]
+    name: k-services java ${{ matrix.java }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # git clone
+      - name: Git clone
+        uses: actions/checkout@v1
+
+      # java
+      - name: Setup java ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+
+      # python: pip install httpie
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache python ${{ matrix.python-version }} deps
+        uses: actions/cache@v1
+        with:
+          path: ~/.pip
+          key: ${{ runner.os }}-${{ matrix.os }}-pip-
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.os }}-pip-
+      - name: Install / upgrade pip
+        run: python -m pip install --upgrade pip setuptools
+      - name: Install HTTPie
+        run: pip install --upgrade httpie
+
+      # node: npm install wait-port
+      - name: Setup NodeJS ${{ matrix.nodejs-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.nodejs-version }}
+      - name: Cache npm ${{ matrix.nodejs-version }} deps
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-${{ matrix.os }}-npm-
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.os }}-npm-
+      - name: Install npm apps (wait-port)
+        run: npm install -g wait-port
+
+#      - name: Cache gradle deps ~/.gradle
+#        uses: actions/cache@v1
+#        with:
+#          path: ~/.gradle
+#          key: ${{ runner.os }}-${{ matrix.os }}-gradle-
+#          restore-keys: |
+#            ${{ runner.os }}-${{ matrix.os }}-gradle-
+      - name: Cache gradle deps
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle # npm cache files are stored in `~/.gradle` on Linux/macOS
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Build gradle apps
+        run: |
+          cd $GITHUB_WORKSPACE && ./gradlew -p gateway
+          cd $GITHUB_WORKSPACE && ./gradlew -p service-a
+          cd $GITHUB_WORKSPACE && ./gradlew -p service-b
+      - name: Run gradle apps
+        run: |
+          java -jar $GITHUB_WORKSPACE/gateway/build/libs/*.jar &
+          java -jar $GITHUB_WORKSPACE/service-a/build/libs/*.jar &
+          java -jar $GITHUB_WORKSPACE/service-b/build/libs/*.jar &
+
+      - name: Test gw app
+        run: |
+          echo "wait-port 8000 8001 8002"
+          wait-port 8001
+          wait-port 8002
+          wait-port 8000
+          echo "http :8000"
+          http :8000
+          echo "http :8000/api"
+          http :8000/api
+
+      - name: Test service-a
+        run: |
+          echo "http :8000/a"
+          http :8000/a
+          echo "http :8000/a/b/c/d/e/f/g..."
+          http :8000/a/b/c/d/e/f/g...
+
+      - name: Test service-b
+        run: |
+          echo "http :8000/service-b"
+          http :8000/service-b
+          echo "http :8000/service-b/ololo"
+          http :8000/service-b/ololo
+          echo "http :8000/service-b/ololo/trololo"
+          http :8000/service-b/ololo/trololo
+
+#      - name: Stop gradle apps
+#        run: |
+#          http post :8000/actuator/shutdown
+#          http post :8001/actuator/shutdown
+#          http post :8002/actuator/shutdown

@@ -1,0 +1,51 @@
+GET http://localhost:8000
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/api
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/b
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/b/c/d/e/f/g...
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/a
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/a/b
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8000/service-a
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8001/
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8001/api/item?id=99
+
+###
+GET http://localhost:8002/
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8002/api/item?id=99
+
+###

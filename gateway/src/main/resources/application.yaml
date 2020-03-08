@@ -1,0 +1,31 @@
+server:
+  port: 8000
+spring:
+  output:
+    ansi:
+      enabled: always
+  cloud:
+    gateway:
+      routes:
+        - id: a_path_route
+          uri: http://127.0.0.1:8001
+          predicates:
+            - Path=/service-a,/service-a/{segment},/service-a/**,/a,/a/{segment},/a/**
+          filters:
+            - RewritePath=/service-a, /
+            - RewritePath=/a, /
+        - id: b_path_route
+          uri: http://127.0.0.1:8002
+          predicates:
+            - Path=/b,/b/{segment},/b/**,/service-b,/service-b/{segment},/service-b/**
+          filters:
+            - RewritePath=/service-b, /
+            - RewritePath=/b, /
+        - id: self_root_path_route
+          uri: http://127.0.0.1:8000
+          predicates:
+            - Path=/
+        - id: self_api_fallback_path_route
+          uri: http://127.0.0.1:8000
+          predicates:
+            - Path=/api,/api/{segment}
