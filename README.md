@@ -2,6 +2,7 @@
 Using spring cloud gateway and kotlin beans dsl...
 
 * https://github.com/spring-cloud/spring-cloud-gateway/blob/master/docs/src/main/asciidoc/spring-cloud-gateway.adoc
+* https://github.com/spring-cloud-samples/spring-cloud-gateway-sample
 * TODO: https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-kotlin-resources-examples
 * [Official Gradle documentation](https://docs.gradle.org)
 * [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.1.13.RELEASE/gradle-plugin/reference/html/)
